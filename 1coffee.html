@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>咖啡點餐POS系統 (優化鍵盤佈局)</title>
+    <!-- 載入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 使用 Inter 字體 */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f7f7; /* 淺灰色背景 */
+        }
+        .btn-menu {
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+        }
+        .btn-menu:active {
+            transform: scale(0.98);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn-keypad {
+             transition: background-color 0.1s ease;
+        }
+        .btn-keypad:active {
+            background-color: #d1d5db; /* 點擊時顏色變深 */
+        }
+        .keypad-special:active {
+             background-color: #fb7185; /* 特殊鍵點擊時顏色變深 */
+        }
+        .item-setting-row:hover {
+            background-color: #fef3c7; /* 淺琥珀色用於編輯提示 */
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <!-- 主應用程式容器 -->
+    <div id="pos-app" class="w-full max-w-6xl bg-white shadow-2xl rounded-xl overflow-hidden flex flex-col lg:flex-row h-[90vh]">
+
+        <!-- 左側: 菜單區 -->
+        <div class="lg:w-3/5 p-6 space-y-6 overflow-y-auto bg-gray-50 border-r border-gray-200">
+            <header class="pb-4 border-b">
+                <!-- 齒輪圖示和標題 -->
+                <div class="flex justify-between items-center">
+                    <h1 class="text-3xl font-bold text-gray-800">咖啡點餐菜單</h1>
+                    <button onclick="openSettings()" class="text-gray-500 hover:text-amber-600 transition duration-150 p-2 rounded-full hover:bg-gray-200" title="開啟設定">
+                        <!-- 齒輪圖示 (Settings Icon) -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 .73 1.73v.52a2 2 0 0 1-.73 1.73l-.15.1a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-.73-1.73v-.52a2 2 0 0 1 .73-1.73l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                </div>
+                <p class="text-sm text-gray-500 mt-1">點擊品項加入訂單 (編號: <span id="order-id" class="font-semibold text-red-500">1</span>)</p>
+            </header>
+
+            <!-- 菜單項目列表 -->
+            <div id="menu-items" class="space-y-6">
+                <!-- 菜單按鈕將由 JS 生成 -->
+            </div>
+        </div>
+
+        <!-- 右側: 訂單與結帳區 -->
+        <div class="lg:w-2/5 flex flex-col p-6 space-y-4 bg-gray-100">
+            
+            <!-- 視圖切換標籤 (Tab) -->
+            <div class="flex border-b border-gray-300">
+                <button id="tab-order" onclick="toggleView('order')" class="flex-1 py-2 px-4 text-center font-bold text-lg rounded-t-lg transition-colors border-b-4 border-amber-500 text-amber-600">
+                    當前訂單
+                </button>
+                <button id="tab-history" onclick="toggleView('history')" class="flex-1 py-2 px-4 text-center font-bold text-lg rounded-t-lg text-gray-500 hover:text-gray-700 border-b-4 border-transparent">
+                    歷史訂單
+                </button>
+            </div>
+
+            <!-- 1. 當前訂單視圖 (預設顯示) -->
+            <div id="order-view" class="flex flex-col flex-grow space-y-4">
+                
+                <!-- 訂單明細 -->
+                <div id="order-details" class="flex-grow overflow-y-auto bg-white p-4 rounded-lg shadow-inner space-y-2 text-sm">
+                    <!-- 訂單明細將由 JS 生成 -->
+                    <p class="text-gray-500 text-center py-4">目前無品項</p>
+                </div>
+
+                <!-- 總計與找零 -->
+                <div class="space-y-3 pt-4 border-t border-gray-200">
+                    <div class="flex justify-between items-center text-xl font-bold text-gray-900">
+                        <span>總計金額 (TWD):</span>
+                        <span id="total-amount" class="text-red-600">$0</span>
+                    </div>
+                </div>
+
+                <!-- 支付區塊 -->
+                <div class="bg-white p-4 rounded-lg shadow space-y-3">
+                    <div class="flex justify-between items-center">
+                        <label for="amount-received" class="text-lg font-medium text-gray-700">顧客付現金額:</label>
+                        <input type="text" id="amount-received" readonly placeholder="0" class="w-32 text-right text-2xl font-semibold border-2 border-amber-300 rounded-lg p-1 bg-amber-50 focus:outline-none">
+                    </div>
+                    
+                    <div class="flex justify-between items-center text-xl font-bold pt-2">
+                        <span>找零金額 (TWD):</span>
+                        <span id="change-amount" class="text-green-600">$0</span>
+                    </div>
+                </div>
+
+                <!-- 虛擬鍵盤與快捷鍵 -->
+                <div class="grid grid-cols-5 gap-2 pt-4">
+                    <!-- 快捷鍵 -->
+                    <button onclick="quickInput(100)" class="col-span-1 p-3 bg-amber-200 text-gray-800 font-bold rounded-lg shadow hover:bg-amber-300">
+                        $100
+                    </button>
+                    <button onclick="quickInput(500)" class="col-span-1 p-3 bg-amber-200 text-gray-800 font-bold rounded-lg shadow hover:bg-amber-300">
+                        $500
+                    </button>
+                    <button onclick="quickInput(1000)" class="col-span-1 p-3 bg-amber-200 text-gray-800 font-bold rounded-lg shadow hover:bg-amber-300">
+                        $1000
+                    </button>
+                    <button onclick="clearPayment()" class="col-span-2 p-3 bg-red-400 text-white font-bold rounded-lg shadow hover:bg-red-500 keypad-special">
+                        清空付額
+                    </button>
+
+                    <!-- 數字鍵盤 -->
+                    <!-- 使用 grid-cols-4 來對齊 7, 8, 9, Del 和下面的行 -->
+                    <div class="col-span-5 grid grid-cols-4 gap-2 mt-2">
+                        <!-- 7, 8, 9, Del -->
+                        <button onclick="keypadInput('7')" class="btn-keypad p-4 bg-white text-gray-800 font-bold text-lg rounded-lg shadow">7</button>
+                        <button onclick="keypadInput('8')" class="btn-keypad p-4 bg-white text-gray-800 font-bold text-lg rounded-lg shadow">8</button>
+                        <button onclick="keypadInput('9')" class="btn-keypad p-4 bg-white text-gray-800 font-bold text-lg rounded-lg shadow">9</button>
+                        <button onclick="keypadInput('del')" class="btn-keypad p-4 bg-red-300 text-white font-bold text-lg rounded-lg shadow hover:bg-red-400">Del</button>
+                        
+                        <!-- 4, 5, 6, Enter (結帳) 橫跨 3 行 -->
+                        <button onclick="keypadInput('4')" class="btn-keypad p-4 bg-white text-gray-800 font-bold text-lg rounded-lg shadow">4</button>
+                        <button onclick="keypadInput('5')" class="btn-keypad p-4 bg-white text-gray-800 font-bold text-lg rounded-lg shadow">5</button>
+                        <button onclick="keypadInput('6')" class="btn-keypad p-4 bg-white text-gray-800 font-bold text-lg rounded-lg shadow">6</button>
+                        <!-- 結帳按鈕現在是 col-span-1 和 row-span-3 -->
+                        <button onclick="processTransaction()" class="col-span-1 row-span-3 p-3 bg-green-500 text-white font-extrabold text-xl rounded-lg shadow hover:bg-green-600 flex items-center justify-center">
+                            結帳
+                        </button>
+                        
+                        <!-- 1, 2, 3 -->
+                        <button onclick="keypadInput('1')" class="btn-keypad p-4 bg-white text-gray-800 font-bold text-lg rounded-lg shadow">1</button>
+                        <button onclick="keypadInput('2')" class="btn-keypad p-4 bg-white text-gray-800 font-bold text-lg rounded-lg shadow">2</button>
+                        <button onclick="keypadInput('3')" class="btn-keypad p-4 bg-white text-gray-800 font-bold text-lg rounded-lg shadow">3</button>
+
+                        <!-- 0 和 清空訂單 (新佈局) -->
+                        <!-- 0 鍵 col-span-2 -->
+                        <button onclick="keypadInput('0')" class="col-span-2 btn-keypad p-4 bg-white text-gray-800 font-bold text-lg rounded-lg shadow">0</button>
+                        
+                        <!-- 清空訂單 (col-span-1) 填補 0 和結帳按鈕之間的空間 -->
+                        <button onclick="clearOrder()" class="col-span-1 p-4 bg-red-600 text-white font-bold text-sm rounded-lg shadow hover:bg-red-700 keypad-special">
+                            清空訂單
+                        </button>
+                        
+                        <!-- 注意: 這裡不再需要隱藏的佔位 div，因為結帳按鈕已經佔據了該位置。 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. 歷史訂單視圖 (預設隱藏) -->
+            <div id="history-view" class="hidden flex-col flex-grow overflow-y-auto space-y-4">
+                <p class="text-sm text-gray-500">最近完成的交易記錄 (最新的顯示在最上方)。</p>
+
+                <!-- 銷售統計概覽 -->
+                <div id="history-stats" class="bg-white p-4 rounded-xl shadow border-l-4 border-blue-500">
+                    <h4 class="text-lg font-bold text-blue-700 mb-2">銷售統計概覽</h4>
+                    <div id="stats-content" class="text-sm text-gray-700 space-y-1">
+                        <p>總訂單數: <span id="stat-total-orders" class="font-semibold text-xl text-blue-600">0</span></p>
+                        <div class="pt-2 border-t mt-2">
+                             <h5 class="font-semibold text-gray-600">單品銷售數量統計:</h5>
+                             <ul id="stat-item-list" class="mt-1 space-y-0.5 grid grid-cols-2 gap-x-4">
+                                 <!-- 統計列表將由 JS 渲染 -->
+                             </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 新增：結算與清除按鈕 -->
+                <div class="pt-4 border-t border-gray-300">
+                    <button onclick="settleAndClearHistory()" class="w-full py-3 bg-red-600 text-white font-extrabold text-lg rounded-lg shadow-xl hover:bg-red-700 transition">
+                        📊 結算並清空所有歷史訂單
+                    </button>
+                </div>
+
+                <div id="history-list" class="space-y-3">
+                    <!-- 歷史訂單列表將由 JS 渲染 -->
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Custom Message Box (替代 alert/confirm) -->
+    <div id="message-box" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-xl space-y-4"> <!-- 調整寬度以容納報告內容 -->
+            <h3 id="message-title" class="text-xl font-bold text-gray-800">提示</h3>
+            <!-- Pre-wrap 用於保留報告中的換行與格式 -->
+            <p id="message-content" class="text-gray-600 whitespace-pre-wrap font-mono text-sm leading-relaxed"></p> 
+            <div class="flex justify-end space-x-2">
+                <button id="message-confirm-btn" onclick="hideMessage(true)" class="hidden px-4 py-2 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600">確定</button>
+                <button id="message-ok-btn" onclick="hideMessage(false)" class="px-4 py-2 bg-amber-500 text-white font-semibold rounded-lg hover:bg-amber-600">確認</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal (新增設定視窗) -->
+    <div id="settings-modal" class="fixed inset-0 bg-gray-900 bg-opacity-70 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto space-y-6">
+            <h3 class="text-2xl font-bold text-gray-800 border-b pb-2">菜單與價格設定</h3>
+            <p class="text-sm text-gray-500">點擊項目可修改名稱和價格，或點擊刪除按鈕。</p>
+            
+            <!-- 菜單項目列表與編輯區 -->
+            <div id="settings-menu-list" class="space-y-4">
+                <!-- 設定項目將由 JS 渲染 -->
+            </div>
+
+            <!-- 新增品項表單 -->
+            <div class="border p-4 rounded-lg bg-gray-50 space-y-3">
+                <h4 class="text-lg font-semibold text-gray-700">新增品項</h4>
+                <div class="grid grid-cols-3 gap-3">
+                    <input type="text" id="new-item-name" placeholder="品項名稱" class="col-span-1 p-2 border rounded focus:border-amber-500 focus:ring-1 focus:ring-amber-500">
+                    <input type="number" id="new-item-price" placeholder="價格 (TWD)" class="col-span-1 p-2 border rounded focus:border-amber-500 focus:ring-1 focus:ring-amber-500">
+                    <select id="new-item-category" class="col-span-1 p-2 border rounded focus:border-amber-500 focus:ring-1 focus:ring-amber-500">
+                        <option value="HandBrew">手沖咖啡</option>
+                        <option value="GiftBox">咖啡禮盒</option>
+                    </select>
+                </div>
+                <button onclick="addNewMenuItem()" class="w-full py-2 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600">
+                    新增品項
+                </button>
+            </div>
+
+            <div class="flex justify-end">
+                <button onclick="closeSettings()" class="px-6 py-2 bg-amber-500 text-white font-semibold rounded-lg hover:bg-amber-600">
+                    完成設定並關閉
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 初始菜單數據 (如果 localStorage 沒有，則使用這個)
+        const defaultMenuItems = [
+            { id: 1, name: '手沖口味1', price: 160, category: 'HandBrew' },
+            { id: 2, name: '手沖口味2', price: 110, category: 'HandBrew' },
+            { id: 3, name: '手沖口味3', price: 110, category: 'HandBrew' },
+            { id: 4, name: '手沖口味4', price: 110, category: 'HandBrew' },
+            { id: 5, name: '手沖口味5', price: 110, category: 'HandBrew' },
+            // 新增禮盒品項
+            { id: 6, name: '粉紅爺家雪菲', price: 450, category: 'GiftBox' },
+            { id: 7, name: '黑色曼特寧', price: 350, category: 'GiftBox' },
+        ];
+        
+        const menuCategories = {
+            'HandBrew': '手沖咖啡',
+            'GiftBox': '咖啡禮盒'
+        };
+
+        // 應用程式狀態
+        let menuItems = []; // 實際使用的菜單，從 localStorage 載入
+        let currentOrder = {}; // { itemId: count, ... }
+        let totalAmount = 0;
+        let orderId = 1; // 訂單編號
+        let historicalOrders = []; // 歷史訂單列表
+        let currentView = 'order'; // 當前視圖 ('order' 或 'history')
+
+        // localStorage 儲存鍵
+        const STORAGE_KEY_HISTORY = 'POS_HISTORY'; 
+        const STORAGE_KEY_ORDER_ID = 'POS_ORDER_ID'; 
+        const STORAGE_KEY_MENU = 'POS_MENU_ITEMS'; 
+
+        // 全域 DOM 元素變數
+        let orderIdEl, menuItemsEl, orderDetailsEl, totalAmountEl, amountReceivedEl, changeAmountEl, historyListEl;
+        let tabOrderEl, tabHistoryEl, orderViewEl, historyViewEl;
+        let messageBoxEl, messageTitleEl, messageContentEl, messageOkBtn, messageConfirmBtn;
+        let settingsModalEl, settingsMenuListEl;
+        let messageResolve = null; 
+
+        // === 訊息對話框函式 (取代 alert/confirm) ===
+        function showMessage(title, content, isConfirm = false) {
+            messageTitleEl.textContent = title;
+            // 處理內容中的粗體標記 (markdown **...)，並使用 font-mono 樣式
+            messageContentEl.innerHTML = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            
+            if (isConfirm) {
+                messageOkBtn.textContent = '取消';
+                messageConfirmBtn.classList.remove('hidden');
+            } else {
+                messageOkBtn.textContent = '確認';
+                messageConfirmBtn.classList.add('hidden');
+            }
+
+            messageBoxEl.classList.remove('hidden');
+
+            return new Promise(resolve => {
+                messageResolve = resolve;
+            });
+        }
+
+        function hideMessage(result) {
+            messageBoxEl.classList.add('hidden');
+            if (messageResolve) {
+                messageResolve(result);
+                messageResolve = null;
+            }
+        }
+        
+        // === 儲存與載入函式 (使用 localStorage 實現持久化) ===
+
+        /** 儲存應用程式的狀態 (歷史訂單、訂單編號、菜單) 到 localStorage。 */
+        function saveAppState() {
+            try {
+                localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(historicalOrders));
+                localStorage.setItem(STORAGE_KEY_ORDER_ID, orderId.toString());
+                localStorage.setItem(STORAGE_KEY_MENU, JSON.stringify(menuItems)); // 儲存菜單
+            } catch (e) {
+                console.error("無法儲存資料到 localStorage:", e);
+            }
+        }
+
+        /** * 從 localStorage 載入應用程式的狀態，並增加對歷史訂單的健壯性檢查。
+         */
+        function loadAppState() {
+            try {
+                // 載入歷史訂單 (新增健壯性檢查)
+                const historyJson = localStorage.getItem(STORAGE_KEY_HISTORY);
+                if (historyJson) {
+                    try {
+                        const parsedHistory = JSON.parse(historyJson);
+                        if (Array.isArray(parsedHistory)) {
+                            historicalOrders = parsedHistory;
+                        } else {
+                            // 如果解析出的不是陣列，則重置為空，並給予警告
+                            console.warn("LocalStorage 歷史訂單資料格式錯誤或已損壞，已重置歷史紀錄。");
+                            historicalOrders = [];
+                        }
+                    } catch (e) {
+                        console.error("解析歷史訂單 JSON 失敗，資料已損壞:", e);
+                        historicalOrders = []; // 解析失敗時重置
+                    }
+                }
+                
+                // 載入訂單編號
+                const idString = localStorage.getItem(STORAGE_KEY_ORDER_ID);
+                if (idString) {
+                    const loadedId = parseInt(idString);
+                    if (!isNaN(loadedId) && loadedId > 0) {
+                        orderId = loadedId;
+                    }
+                }
+
+                // 載入菜單 
+                const menuJson = localStorage.getItem(STORAGE_KEY_MENU);
+                if (menuJson) {
+                    menuItems = JSON.parse(menuJson);
+                } else {
+                    menuItems = defaultMenuItems;
+                }
+
+            } catch (e) {
+                console.error("無法載入資料從 localStorage:", e);
+                historicalOrders = [];
+                orderId = 1;
+                menuItems = defaultMenuItems; // 載入失敗時，使用預設菜單
+            }
+        }
+
+        // === 核心功能函式 ===
+
+        // 初始化：確保在 DOM 內容完全載入後才執行所有 DOM 相關操作
+        document.addEventListener('DOMContentLoaded', () => {
+            // 賦值所有 DOM 元素
+            orderIdEl = document.getElementById('order-id');
+            menuItemsEl = document.getElementById('menu-items');
+            orderDetailsEl = document.getElementById('order-details');
+            totalAmountEl = document.getElementById('total-amount');
+            amountReceivedEl = document.getElementById('amount-received');
+            changeAmountEl = document.getElementById('change-amount');
+            historyListEl = document.getElementById('history-list');
+
+            tabOrderEl = document.getElementById('tab-order');
+            tabHistoryEl = document.getElementById('tab-history');
+            orderViewEl = document.getElementById('order-view');
+            historyViewEl = document.getElementById('history-view');
+
+            messageBoxEl = document.getElementById('message-box');
+            messageTitleEl = document.getElementById('message-title');
+            messageContentEl = document.getElementById('message-content');
+            messageOkBtn = document.getElementById('message-ok-btn');
+            messageConfirmBtn = document.getElementById('message-confirm-btn');
+
+            settingsModalEl = document.getElementById('settings-modal');
+            settingsMenuListEl = document.getElementById('settings-menu-list');
+
+            loadAppState(); 
+            renderMenuItems();
+            updateOrderSummary();
+            orderIdEl.textContent = orderId;
+            toggleView('order'); 
+        });
+
+
+        // 渲染菜單按鈕 (更新以支援分類)
+        function renderMenuItems() {
+            if (!menuItemsEl) return;
+            menuItemsEl.innerHTML = '';
+            
+            // 根據 category 分組
+            const groupedItems = menuItems.reduce((acc, item) => {
+                const category = item.category || 'HandBrew'; // 確保有類別
+                if (!acc[category]) {
+                    acc[category] = [];
+                }
+                acc[category].push(item);
+                return acc;
+            }, {});
+
+            // 渲染每個類別
+            Object.keys(groupedItems).forEach(categoryKey => {
+                const categoryTitle = menuCategories[categoryKey] || '其他品項';
+
+                // 類別標題
+                const titleEl = document.createElement('h2');
+                titleEl.className = 'text-2xl font-semibold text-gray-700 mt-4 mb-2 border-b border-amber-300 pb-1';
+                titleEl.textContent = categoryTitle;
+                menuItemsEl.appendChild(titleEl);
+
+                // 類別下的品項列表
+                const itemsContainer = document.createElement('div');
+                itemsContainer.className = 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4';
+                
+                groupedItems[categoryKey].forEach(item => {
+                    const button = document.createElement('button');
+                    button.className = `btn-menu p-4 bg-amber-400 text-white font-semibold text-lg rounded-xl shadow-lg hover:bg-amber-500`;
+                    button.innerHTML = `
+                        <span class="block text-xl">${item.name}</span>
+                        <span class="block text-sm font-light">$${item.price}</span>
+                        <span class="block text-xs mt-1 text-amber-900 font-bold">點擊加入</span>
+                    `;
+                    button.onclick = () => addToOrder(item.id);
+                    itemsContainer.appendChild(button);
+                });
+                
+                menuItemsEl.appendChild(itemsContainer);
+            });
+        }
+
+        // 將品項加入訂單
+        function addToOrder(itemId) {
+            const item = menuItems.find(i => i.id === itemId);
+            if (!item) {
+                showMessage('錯誤', '此品項已不存在於菜單中。');
+                return;
+            }
+            if (currentOrder[itemId]) {
+                currentOrder[itemId]++;
+            } else {
+                currentOrder[itemId] = 1;
+            }
+            updateOrderSummary();
+        }
+
+        // 移除訂單中的品項 (減少數量)
+        function removeFromOrder(itemId) {
+            if (currentOrder[itemId] && currentOrder[itemId] > 0) {
+                currentOrder[itemId]--;
+                if (currentOrder[itemId] === 0) {
+                    delete currentOrder[itemId];
+                }
+            }
+            updateOrderSummary();
+        }
+
+        // 更新訂單總結 (明細與總計)
+        function updateOrderSummary() {
+            if (!orderDetailsEl || !totalAmountEl) return;
+            
+            orderDetailsEl.innerHTML = '';
+            totalAmount = 0;
+            const items = Object.keys(currentOrder).filter(key => currentOrder[key] > 0);
+
+            if (items.length === 0) {
+                orderDetailsEl.innerHTML = '<p class="text-gray-500 text-center py-4">目前無品項</p>';
+                totalAmount = 0;
+            } else {
+                items.forEach(itemIdStr => {
+                    const itemId = parseInt(itemIdStr);
+                    const item = menuItems.find(i => i.id === itemId);
+                    
+                    // 處理菜單已刪除但訂單中仍有的情況
+                    if (!item) {
+                        const deletedItemName = '已刪除品項'; // 顯示替代名稱
+                        const count = currentOrder[itemId];
+                        const detailRow = document.createElement('div');
+                        detailRow.className = 'flex justify-between items-center border-b border-gray-100 py-1 bg-red-50';
+                         detailRow.innerHTML = `
+                            <div class="flex items-center space-x-2">
+                                <button onclick="removeFromOrder(${itemId})" class="text-red-500 hover:text-red-700 font-bold text-lg">-</button>
+                                <span class="text-gray-700 font-medium">${deletedItemName} (ID:${itemId})</span>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <span class="font-mono text-gray-600">${count} x N/A</span>
+                                <span class="font-bold text-gray-800">N/A</span>
+                            </div>
+                        `;
+                        orderDetailsEl.appendChild(detailRow);
+                        return; // 跳過總計計算，因為價格未知
+                    }
+
+                    const count = currentOrder[itemId];
+                    const subtotal = item.price * count;
+                    totalAmount += subtotal;
+
+                    const detailRow = document.createElement('div');
+                    detailRow.className = 'flex justify-between items-center border-b border-gray-100 py-1';
+                    detailRow.innerHTML = `
+                        <div class="flex items-center space-x-2">
+                            <button onclick="removeFromOrder(${item.id})" class="text-red-500 hover:text-red-700 font-bold text-lg">-</button>
+                            <span class="text-gray-700 font-medium">${item.name}</span>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <span class="font-mono text-gray-600">${count} x $${item.price}</span>
+                            <span class="font-bold text-gray-800">$${subtotal}</span>
+                        </div>
+                    `;
+                    orderDetailsEl.appendChild(detailRow);
+                });
+            }
+
+            totalAmountEl.textContent = `$${totalAmount}`;
+            calculateChange(); 
+        }
+        
+        // 虛擬鍵盤輸入邏輯
+        function keypadInput(key) {
+            if (!amountReceivedEl) return;
+            
+            let currentValue = amountReceivedEl.value || '';
+            
+            if (key === 'del') {
+                amountReceivedEl.value = currentValue.slice(0, -1);
+            } else if (key === '.') {
+                // 假設是整數交易，不允許小數點
+            } else {
+                if (currentValue.length < 8) {
+                    amountReceivedEl.value = currentValue + key;
+                }
+            }
+            
+            if (amountReceivedEl.value.startsWith('0') && amountReceivedEl.value.length > 1) {
+                amountReceivedEl.value = amountReceivedEl.value.substring(1);
+            }
+            
+            calculateChange();
+        }
+
+        // 快速輸入按鈕
+        function quickInput(amount) {
+            if (!amountReceivedEl) return;
+            let current = parseInt(amountReceivedEl.value) || 0;
+            amountReceivedEl.value = current + amount;
+            calculateChange();
+        }
+        
+        // 清空付現金額
+        function clearPayment() {
+            if (!amountReceivedEl) return;
+            amountReceivedEl.value = '';
+            calculateChange();
+        }
+
+        // 計算找零
+        function calculateChange() {
+            if (!amountReceivedEl || !changeAmountEl) return;
+            
+            const received = parseInt(amountReceivedEl.value) || 0;
+            
+            if (totalAmount === 0) {
+                changeAmountEl.textContent = '$0';
+                changeAmountEl.className = 'text-xl font-bold pt-2 text-green-600';
+                return;
+            }
+
+            const change = received - totalAmount;
+
+            if (change >= 0) {
+                changeAmountEl.textContent = `$${change}`;
+                changeAmountEl.className = 'text-xl font-bold pt-2 text-green-600';
+            } else {
+                changeAmountEl.textContent = `$${Math.abs(change)} (不足)`;
+                changeAmountEl.className = 'text-xl font-bold pt-2 text-red-600'; 
+            }
+        }
+
+        // 處理交易 (結帳) 
+        async function processTransaction() {
+            if (totalAmount === 0) {
+                await showMessage('錯誤', '請先點選品項加入訂單！');
+                return;
+            }
+
+            const received = parseInt(amountReceivedEl.value) || 0;
+            const change = received - totalAmount;
+            
+            if (change < 0) {
+                await showMessage('錯誤', `付現金額不足！尚需補足 $${Math.abs(change)}。`);
+                return;
+            }
+
+            // 1. 儲存歷史訂單
+            const totalItemsCount = Object.values(currentOrder).reduce((sum, count) => sum + count, 0);
+
+            // 存儲的 items 應包含名稱和價格，以確保歷史訂單的準確性
+            const itemsSnapshot = Object.keys(currentOrder).map(itemIdStr => {
+                const itemId = parseInt(itemIdStr);
+                const itemData = menuItems.find(i => i.id === itemId) || { name: '未知/已刪除品項', price: 0 };
+                return {
+                    id: itemId,
+                    name: itemData.name,
+                    price: itemData.price,
+                    count: currentOrder[itemId]
+                };
+            });
+
+            const completedOrder = {
+                id: orderId,
+                items: itemsSnapshot, // 儲存包含名稱和價格的快照
+                total: totalAmount,
+                received: received,
+                change: change,
+                totalItemsCount: totalItemsCount,
+                timestamp: new Date().toLocaleString('zh-TW', { hour12: false }),
+            };
+
+            historicalOrders.unshift(completedOrder); 
+            saveAppState(); 
+
+            // 2. 顯示成功訊息
+            await showMessage('交易成功', `單號: ${orderId}\n總計: $${totalAmount}\n付現: $${received}\n找零: $${change}`);
+
+            // 3. 重置狀態
+            currentOrder = {};
+            totalAmount = 0;
+            amountReceivedEl.value = '';
+            orderId++; 
+            orderIdEl.textContent = orderId;
+            saveAppState(); 
+            
+            updateOrderSummary();
+            toggleView('order');
+        }
+
+        // 清除整個訂單
+        async function clearOrder() {
+            if (Object.keys(currentOrder).length === 0) {
+                await showMessage('提示', '目前訂單已是空的，無需清除。');
+                return;
+            }
+            
+            const confirmed = await showMessage('確認清除', '確定要清除所有訂單品項嗎？', true);
+
+            if (confirmed) {
+                currentOrder = {};
+                totalAmount = 0;
+                amountReceivedEl.value = '';
+                updateOrderSummary();
+                await showMessage('提示', '訂單已清除。');
+            }
+        }
+
+        // === 歷史訂單統計功能 ===
+
+        /** 計算所有歷史訂單中每個品項的總銷售數量 */
+        function calculateItemStatistics() {
+            const stats = {};
+            let totalOrders = historicalOrders.length;
+
+            historicalOrders.forEach(order => {
+                order.items.forEach(item => {
+                    const itemName = item.name;
+                    const count = item.count;
+                    
+                    if (!stats[itemName]) {
+                        stats[itemName] = 0;
+                    }
+                    stats[itemName] += count;
+                });
+            });
+
+            return { stats, totalOrders };
+        }
+
+        // 渲染歷史訂單 (更新以顯示統計)
+        function renderHistoricalOrders() {
+            if (!historyListEl) return;
+            historyListEl.innerHTML = '';
+            
+            // 1. 渲染統計數據
+            const { stats, totalOrders } = calculateItemStatistics();
+            const statTotalOrdersEl = document.getElementById('stat-total-orders');
+            if (statTotalOrdersEl) statTotalOrdersEl.textContent = totalOrders;
+            
+            const statListEl = document.getElementById('stat-item-list');
+            if (!statListEl) return;
+            statListEl.innerHTML = '';
+            
+            const sortedStats = Object.entries(stats).sort(([, a], [, b]) => b - a);
+
+            if (sortedStats.length === 0) {
+                statListEl.innerHTML = '<li class="col-span-2 text-gray-500">暫無銷售數據。</li>';
+            } else {
+                sortedStats.forEach(([name, count]) => {
+                    const li = document.createElement('li');
+                    li.className = 'flex justify-between';
+                    li.innerHTML = `<span>${name}:</span><span class="font-extrabold text-blue-500">${count}</span>`;
+                    statListEl.appendChild(li);
+                });
+            }
+
+            // 2. 渲染訂單列表
+            if (historicalOrders.length === 0) {
+                historyListEl.innerHTML = '<p class="text-gray-500 text-center py-4">尚無歷史交易記錄。</p>';
+                return;
+            }
+
+            historicalOrders.forEach(order => {
+                const historyCard = document.createElement('div');
+                historyCard.className = 'bg-white p-4 rounded-xl shadow-md border-l-4 border-amber-500 space-y-2';
+                
+                // 建立明細列表
+                const itemDetails = order.items.map(item => 
+                    `<li class="flex justify-between text-xs text-gray-500">
+                        <span>${item.name}</span>
+                        <span>${item.count} x $${item.price}</span>
+                    </li>`
+                ).join('');
+
+                historyCard.innerHTML = `
+                    <div class="flex justify-between items-center pb-1 border-b border-gray-100">
+                        <span class="text-lg font-bold text-gray-800">單號: ${order.id}</span>
+                        <span class="text-sm text-gray-500">${order.timestamp}</span>
+                    </div>
+                    
+                    <ul class="list-disc pl-4 space-y-1">${itemDetails}</ul>
+                    
+                    <div class="flex justify-between text-sm text-gray-700 pt-2 border-t">
+                        <span>總計金額:</span>
+                        <span class="font-bold text-red-600 text-lg">$${order.total}</span>
+                    </div>
+                    <div class="flex justify-between text-sm text-gray-700">
+                        <span>找零:</span>
+                        <span class="font-bold text-green-600">$${order.change}</span>
+                    </div>
+                `;
+                historyListEl.appendChild(historyCard);
+            });
+        }
+
+        // === 新增：結算並清空歷史訂單的函數 (已修正重設 orderId 的問題) ===
+        async function settleAndClearHistory() {
+            if (historicalOrders.length === 0) {
+                await showMessage('操作提示', '目前歷史訂單記錄為空，無需執行結算操作。');
+                return;
+            }
+
+            // 1. 執行結算統計
+            const { stats, totalOrders } = calculateItemStatistics();
+            
+            // 計算總銷售金額
+            let totalRevenue = 0;
+            historicalOrders.forEach(order => {
+                totalRevenue += order.total;
+            });
+
+            // 找出最暢銷的品項
+            const sortedStats = Object.entries(stats).sort(([, a], [, b]) => b - a);
+            const topSeller = sortedStats.length > 0 ? sortedStats[0] : ['無', 0];
+            
+            // 找出最早與最晚的交易日期
+            const firstOrder = historicalOrders[historicalOrders.length - 1]; 
+            const lastOrder = historicalOrders[0];
+            const totalItemsSold = Object.values(stats).reduce((sum, count) => sum + count, 0);
+
+            // 2. 準備正式的報告內容 (符合段落式、報告風格)
+            const reportContent = `
+**[正式結算評估報告]**
+---
+**結算週期概述：**
+本次結算涵蓋了 **${totalOrders} 筆**歷史交易記錄。結算期間從最早的交易時間點 **${firstOrder.timestamp}** 至最近的交易時間點 **${lastOrder.timestamp}** 為止。這段期間內，總營業額（Total Revenue）達到 **$${totalRevenue} TWD**，顯示了穩定的營運表現。
+
+**單品銷售分析：**
+在所有販售的品項中，共計有 **${Object.keys(stats).length} 種**不同的產品產生銷售。所有品項總共售出 **${totalItemsSold} 個**。
+銷售數量最高的產品是 **「${topSeller[0]}」**，總共售出 **${topSeller[1]} 個**，其為本期的銷售主力，佔總銷量約 **${(topSeller[1] / totalItemsSold * 100).toFixed(1)}%**。
+
+**操作建議：**
+在確認此報告內容無誤並記錄完畢後，建議執行清除操作以優化系統性能並準備迎接新的結算週期。
+
+**請確認您是否要執行清除操作。**
+`;
+
+            // 3. 彈出確認視窗
+            const confirmed = await showMessage(
+                '結算報告及清除確認', 
+                reportContent, 
+                true // 設定為確認模式 (Confirm)
+            );
+
+            // 4. 執行清除
+            if (confirmed) {
+                // 清空歷史訂單
+                historicalOrders = [];
+                
+                // === 關鍵修正：重設訂單 ID 至 1 ===
+                orderId = 1; 
+                orderIdEl.textContent = orderId; 
+                // ===================================
+                
+                saveAppState(); // 儲存空的歷史和新的 orderId
+                
+                // 重新渲染歷史視圖
+                renderHistoricalOrders();
+                
+                // 成功提示
+                await showMessage('操作成功', '歷史訂單數據已成功結算並清除！訂單編號已重設為 1。');
+            } else {
+                await showMessage('操作取消', '結算操作已取消，歷史記錄保持不變。');
+            }
+        }
+
+
+        // 切換視圖
+        function toggleView(view) {
+            if (!tabOrderEl || !tabHistoryEl || !orderViewEl || !historyViewEl) {
+                 console.error("DOM 元素尚未載入，無法切換視圖！");
+                 return;
+            }
+            
+            currentView = view;
+            
+            if (view === 'order') {
+                tabOrderEl.className = 'flex-1 py-2 px-4 text-center font-bold text-lg rounded-t-lg transition-colors border-b-4 border-amber-500 text-amber-600';
+                tabHistoryEl.className = 'flex-1 py-2 px-4 text-center font-bold text-lg rounded-t-lg text-gray-500 hover:text-gray-700 border-b-4 border-transparent';
+                
+                orderViewEl.classList.remove('hidden');
+                historyViewEl.classList.add('hidden');
+            } else { 
+                tabOrderEl.className = 'flex-1 py-2 px-4 text-center font-bold text-lg rounded-t-lg text-gray-500 hover:text-gray-700 border-b-4 border-transparent';
+                tabHistoryEl.className = 'flex-1 py-2 px-4 text-center font-bold text-lg rounded-t-lg transition-colors border-b-4 border-amber-500 text-amber-600';
+                
+                orderViewEl.classList.add('hidden');
+                historyViewEl.classList.remove('hidden'); 
+                renderHistoricalOrders(); 
+            }
+        }
+
+        // === 菜單設定功能 (與原程式碼相同) ===
+
+        /** 開啟設定模態視窗 */
+        function openSettings() {
+            if (!settingsModalEl) return;
+            renderSettingsList();
+            settingsModalEl.classList.remove('hidden');
+        }
+
+        /** 關閉設定模態視窗 */
+        function closeSettings() {
+            if (!settingsModalEl) return;
+            // 重新渲染主菜單以應用任何變更
+            renderMenuItems();
+            // 重新計算當前訂單 (以防有品項被刪除或價格變更)
+            updateOrderSummary(); 
+            settingsModalEl.classList.add('hidden');
+        }
+
+        /** 渲染設定介面中的菜單列表 */
+        function renderSettingsList() {
+            if (!settingsMenuListEl) return;
+            settingsMenuListEl.innerHTML = '';
+            
+            // 根據 category 分組渲染
+            const groupedItems = menuItems.reduce((acc, item) => {
+                const category = item.category || 'HandBrew';
+                if (!acc[category]) {
+                    acc[category] = [];
+                }
+                acc[category].push(item);
+                return acc;
+            }, {});
+
+            Object.keys(groupedItems).forEach(categoryKey => {
+                const categoryTitle = menuCategories[categoryKey] || '其他品項';
+
+                const titleEl = document.createElement('h4');
+                titleEl.className = 'text-xl font-bold text-gray-700 mt-4 mb-2';
+                titleEl.textContent = categoryTitle;
+                settingsMenuListEl.appendChild(titleEl);
+
+                groupedItems[categoryKey].forEach(item => {
+                    const row = document.createElement('div');
+                    row.id = `setting-item-${item.id}`;
+                    row.className = 'item-setting-row flex items-center justify-between p-3 bg-white border rounded-lg shadow-sm';
+                    row.innerHTML = `
+                        <!-- 編輯欄位 -->
+                        <div class="flex-1 grid grid-cols-3 gap-2 items-center">
+                            <input type="text" value="${item.name}" 
+                                id="name-${item.id}" 
+                                class="p-1 border rounded focus:border-amber-500" 
+                                onchange="editMenuItem(${item.id}, 'name', this.value)">
+                            <input type="number" value="${item.price}" 
+                                id="price-${item.id}" 
+                                class="p-1 border rounded text-right focus:border-amber-500" 
+                                onchange="editMenuItem(${item.id}, 'price', parseInt(this.value) || 0)">
+                            <select id="category-${item.id}" class="p-1 border rounded focus:border-amber-500" onchange="editMenuItem(${item.id}, 'category', this.value)">
+                                ${Object.keys(menuCategories).map(key => 
+                                    `<option value="${key}" ${item.category === key ? 'selected' : ''}>${menuCategories[key]}</option>`
+                                ).join('')}
+                            </select>
+                        </div>
+                        <!-- 刪除按鈕 -->
+                        <button onclick="deleteMenuItem(${item.id})" class="ml-4 p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">
+                            <!-- 垃圾桶圖示 -->
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                        </button>
+                    `;
+                    settingsMenuListEl.appendChild(row);
+                });
+            });
+        }
+
+        /** 編輯現有菜單品項 */
+        function editMenuItem(id, key, value) {
+            const index = menuItems.findIndex(item => item.id === id);
+            if (index !== -1) {
+                // 確保價格不為負
+                if (key === 'price' && value < 0) {
+                    value = 0;
+                    const priceEl = document.getElementById(`price-${id}`);
+                    if (priceEl) priceEl.value = 0;
+                }
+                menuItems[index][key] = value;
+                saveAppState();
+            }
+        }
+
+        /** 刪除菜單品項 */
+        async function deleteMenuItem(id) {
+            const confirmed = await showMessage('確認刪除', `確定要刪除此品項嗎? 刪除後需要重新整理頁面才能清除當前訂單中此品項的餘額計算。`, true);
+            
+            if (confirmed) {
+                menuItems = menuItems.filter(item => item.id !== id);
+                const itemEl = document.getElementById(`setting-item-${id}`);
+                if (itemEl) itemEl.remove();
+                saveAppState();
+            }
+        }
+
+        /** 新增菜單品項 */
+        async function addNewMenuItem() {
+            const nameInput = document.getElementById('new-item-name');
+            const priceInput = document.getElementById('new-item-price');
+            const categoryInput = document.getElementById('new-item-category');
+
+            if (!nameInput || !priceInput || !categoryInput) {
+                console.error("新增品項表單元素遺失。");
+                return;
+            }
+
+            const name = nameInput.value.trim();
+            const price = parseInt(priceInput.value);
+            const category = categoryInput.value;
+
+            if (!name) {
+                await showMessage('錯誤', '請輸入品項名稱。');
+                return;
+            }
+            if (isNaN(price) || price < 0) {
+                await showMessage('錯誤', '請輸入有效的價格 (非負數)。');
+                return;
+            }
+
+            // 取得新的 ID (找到最大的 ID + 1)
+            const newId = menuItems.length > 0 ? Math.max(...menuItems.map(item => item.id)) + 1 : 1;
+
+            const newItem = {
+                id: newId,
+                name: name,
+                price: price,
+                category: category
+            };
+
+            menuItems.push(newItem);
+            saveAppState();
+            
+            // 清空表單並重新渲染設定列表
+            nameInput.value = '';
+            priceInput.value = '';
+            renderSettingsList();
+
+            await showMessage('成功', `品項 "${name}" 已成功新增！`);
+        }
+    </script>
+</body>
+</html>
