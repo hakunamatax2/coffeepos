@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>咖啡點餐POS系統 (優化鍵盤佈局)</title>
-    <!-- 載入 Tailwind CSS -->
+    <title>咖啡點餐POS系統 (優化平板適配)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* 使用 Inter 字體 */
@@ -13,15 +12,18 @@
             font-family: 'Inter', sans-serif;
             background-color: #f7f7f7; /* 淺灰色背景 */
         }
+        /* 優化按鈕觸控體驗 */
         .btn-menu {
             transition: transform 0.1s ease, box-shadow 0.1s ease;
+            min-height: 100px; /* 確保按鈕有足夠的高度 */
         }
         .btn-menu:active {
             transform: scale(0.98);
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        .btn-keypad {
+        .btn-keypad, .keypad-special {
              transition: background-color 0.1s ease;
+             min-height: 56px; /* 確保鍵盤按鈕高度 */
         }
         .btn-keypad:active {
             background-color: #d1d5db; /* 點擊時顏色變深 */
@@ -32,205 +34,196 @@
         .item-setting-row:hover {
             background-color: #fef3c7; /* 淺琥珀色用於編輯提示 */
         }
+
+        /* 優化平板/小型裝置的佈局 */
+        @media (max-width: 1023px) { /* < lg 斷點 (平板與手機) */
+            /* 主容器高度調整，以適應垂直滾動 */
+            #pos-app {
+                height: auto; /* 允許內容自然撐開高度 */
+                min-height: 100vh;
+                flex-direction: column; /* 堆疊佈局 */
+            }
+            /* 左側菜單區調整，padding 增大，滾動舒適 */
+            .menu-section {
+                 padding: 1.5rem; /* 增大 padding */
+            }
+            /* 右側訂單區調整 */
+            .order-section {
+                 padding: 1.5rem; /* 增大 padding */
+            }
+            /* 調整菜單網格在小螢幕上的列數 */
+            .menu-grid {
+                 grid-template-columns: repeat(2, minmax(0, 1fr)); /* 平板上改為 2 欄 */
+            }
+        }
+         @media (min-width: 1024px) { /* >= lg 斷點 (桌面) */
+            #pos-app {
+                height: 90vh; /* 桌面維持固定高度 */
+            }
+        }
+        /* 確保鍵盤按鈕字體在所有尺寸下都夠大 */
+        .keypad-button-text {
+            font-size: 1.125rem; /* text-lg */
+            font-weight: 700; /* font-bold */
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
 
-    <!-- 主應用程式容器 -->
-    <div id="pos-app" class="w-full max-w-6xl bg-white shadow-2xl rounded-xl overflow-hidden flex flex-col lg:flex-row h-[90vh]">
+    <div id="pos-app" class="w-full max-w-6xl bg-white shadow-2xl rounded-xl overflow-hidden flex flex-col lg:flex-row h-auto lg:h-[90vh]">
 
-        <!-- 左側: 菜單區 -->
-        <div class="lg:w-3/5 p-6 space-y-6 overflow-y-auto bg-gray-50 border-r border-gray-200">
+        <div class="lg:w-3/5 p-6 space-y-6 overflow-y-auto bg-gray-50 border-r border-gray-200 menu-section">
             <header class="pb-4 border-b">
-                <!-- 齒輪圖示和標題 -->
                 <div class="flex justify-between items-center">
                     <h1 class="text-3xl font-bold text-gray-800">咖啡點餐菜單</h1>
-                    <button onclick="openSettings()" class="text-gray-500 hover:text-amber-600 transition duration-150 p-2 rounded-full hover:bg-gray-200" title="開啟設定">
-                        <!-- 齒輪圖示 (Settings Icon) -->
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 .73 1.73v.52a2 2 0 0 1-.73 1.73l-.15.1a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-.73-1.73v-.52a2 2 0 0 1 .73-1.73l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <button onclick="openSettings()" class="text-gray-500 hover:text-amber-600 transition duration-150 p-3 rounded-full hover:bg-gray-200" title="開啟設定">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 .73 1.73v.52a2 2 0 0 1-.73 1.73l-.15.1a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-.73-1.73v-.52a2 2 0 0 1 .73-1.73l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
                     </button>
                 </div>
-                <p class="text-sm text-gray-500 mt-1">點擊品項加入訂單 (編號: <span id="order-id" class="font-semibold text-red-500">1</span>)</p>
+                <p class="text-base text-gray-500 mt-2">點擊品項加入訂單 (編號: <span id="order-id" class="font-semibold text-red-500">1</span>)</p>
             </header>
 
-            <!-- 菜單項目列表 -->
             <div id="menu-items" class="space-y-6">
-                <!-- 菜單按鈕將由 JS 生成 -->
-            </div>
+                </div>
         </div>
 
-        <!-- 右側: 訂單與結帳區 -->
-        <div class="lg:w-2/5 flex flex-col p-6 space-y-4 bg-gray-100">
+        <div class="lg:w-2/5 flex flex-col p-6 space-y-4 bg-gray-100 order-section">
             
-            <!-- 視圖切換標籤 (Tab) -->
             <div class="flex border-b border-gray-300">
-                <button id="tab-order" onclick="toggleView('order')" class="flex-1 py-2 px-4 text-center font-bold text-lg rounded-t-lg transition-colors border-b-4 border-amber-500 text-amber-600">
+                <button id="tab-order" onclick="toggleView('order')" class="flex-1 py-3 px-4 text-center font-bold text-lg rounded-t-lg transition-colors border-b-4 border-amber-500 text-amber-600">
                     當前訂單
                 </button>
-                <button id="tab-history" onclick="toggleView('history')" class="flex-1 py-2 px-4 text-center font-bold text-lg rounded-t-lg text-gray-500 hover:text-gray-700 border-b-4 border-transparent">
+                <button id="tab-history" onclick="toggleView('history')" class="flex-1 py-3 px-4 text-center font-bold text-lg rounded-t-lg text-gray-500 hover:text-gray-700 border-b-4 border-transparent">
                     歷史訂單
                 </button>
             </div>
 
-            <!-- 1. 當前訂單視圖 (預設顯示) -->
             <div id="order-view" class="flex flex-col flex-grow space-y-4">
                 
-                <!-- 訂單明細 -->
-                <div id="order-details" class="flex-grow overflow-y-auto bg-white p-4 rounded-lg shadow-inner space-y-2 text-sm">
-                    <!-- 訂單明細將由 JS 生成 -->
+                <div id="order-details" class="flex-grow overflow-y-auto bg-white p-4 rounded-lg shadow-inner space-y-2 text-base">
                     <p class="text-gray-500 text-center py-4">目前無品項</p>
                 </div>
 
-                <!-- 總計與找零 -->
                 <div class="space-y-3 pt-4 border-t border-gray-200">
-                    <div class="flex justify-between items-center text-xl font-bold text-gray-900">
+                    <div class="flex justify-between items-center text-2xl font-bold text-gray-900">
                         <span>總計金額 (TWD):</span>
                         <span id="total-amount" class="text-red-600">$0</span>
                     </div>
                 </div>
 
-                <!-- 支付區塊 -->
                 <div class="bg-white p-4 rounded-lg shadow space-y-3">
                     <div class="flex justify-between items-center">
-                        <label for="amount-received" class="text-lg font-medium text-gray-700">顧客付現金額:</label>
-                        <input type="text" id="amount-received" readonly placeholder="0" class="w-32 text-right text-2xl font-semibold border-2 border-amber-300 rounded-lg p-1 bg-amber-50 focus:outline-none">
+                        <label for="amount-received" class="text-xl font-medium text-gray-700">顧客付現金額:</label>
+                        <input type="text" id="amount-received" readonly placeholder="0" class="w-40 text-right text-3xl font-extrabold border-2 border-amber-300 rounded-lg p-2 bg-amber-50 focus:outline-none">
                     </div>
                     
-                    <div class="flex justify-between items-center text-xl font-bold pt-2">
+                    <div class="flex justify-between items-center text-2xl font-bold pt-2">
                         <span>找零金額 (TWD):</span>
                         <span id="change-amount" class="text-green-600">$0</span>
                     </div>
                 </div>
 
-                <!-- 虛擬鍵盤與快捷鍵 -->
-                <div class="grid grid-cols-5 gap-2 pt-4">
-                    <!-- 快捷鍵 -->
-                    <button onclick="quickInput(100)" class="col-span-1 p-3 bg-amber-200 text-gray-800 font-bold rounded-lg shadow hover:bg-amber-300">
+                <div class="grid grid-cols-5 gap-3 pt-4"> <button onclick="quickInput(100)" class="col-span-1 p-3 bg-amber-200 text-gray-800 font-bold text-lg rounded-lg shadow hover:bg-amber-300">
                         $100
                     </button>
-                    <button onclick="quickInput(500)" class="col-span-1 p-3 bg-amber-200 text-gray-800 font-bold rounded-lg shadow hover:bg-amber-300">
+                    <button onclick="quickInput(500)" class="col-span-1 p-3 bg-amber-200 text-gray-800 font-bold text-lg rounded-lg shadow hover:bg-amber-300">
                         $500
                     </button>
-                    <button onclick="quickInput(1000)" class="col-span-1 p-3 bg-amber-200 text-gray-800 font-bold rounded-lg shadow hover:bg-amber-300">
+                    <button onclick="quickInput(1000)" class="col-span-1 p-3 bg-amber-200 text-gray-800 font-bold text-lg rounded-lg shadow hover:bg-amber-300">
                         $1000
                     </button>
-                    <button onclick="clearPayment()" class="col-span-2 p-3 bg-red-400 text-white font-bold rounded-lg shadow hover:bg-red-500 keypad-special">
+                    <button onclick="clearPayment()" class="col-span-2 p-3 bg-red-400 text-white font-bold text-lg rounded-lg shadow hover:bg-red-500 keypad-special">
                         清空付額
                     </button>
 
-                    <!-- 數字鍵盤 -->
-                    <!-- 使用 grid-cols-4 來對齊 7, 8, 9, Del 和下面的行 -->
-                    <div class="col-span-5 grid grid-cols-4 gap-2 mt-2">
-                        <!-- 7, 8, 9, Del -->
-                        <button onclick="keypadInput('7')" class="btn-keypad p-4 bg-white text-gray-800 font-bold text-lg rounded-lg shadow">7</button>
-                        <button onclick="keypadInput('8')" class="btn-keypad p-4 bg-white text-gray-800 font-bold text-lg rounded-lg shadow">8</button>
-                        <button onclick="keypadInput('9')" class="btn-keypad p-4 bg-white text-gray-800 font-bold text-lg rounded-lg shadow">9</button>
-                        <button onclick="keypadInput('del')" class="btn-keypad p-4 bg-red-300 text-white font-bold text-lg rounded-lg shadow hover:bg-red-400">Del</button>
-                        
-                        <!-- 4, 5, 6, Enter (結帳) 橫跨 3 行 -->
-                        <button onclick="keypadInput('4')" class="btn-keypad p-4 bg-white text-gray-800 font-bold text-lg rounded-lg shadow">4</button>
-                        <button onclick="keypadInput('5')" class="btn-keypad p-4 bg-white text-gray-800 font-bold text-lg rounded-lg shadow">5</button>
-                        <button onclick="keypadInput('6')" class="btn-keypad p-4 bg-white text-gray-800 font-bold text-lg rounded-lg shadow">6</button>
-                        <!-- 結帳按鈕現在是 col-span-1 和 row-span-3 -->
-                        <button onclick="processTransaction()" class="col-span-1 row-span-3 p-3 bg-green-500 text-white font-extrabold text-xl rounded-lg shadow hover:bg-green-600 flex items-center justify-center">
+                    <div class="col-span-5 grid grid-cols-4 gap-3 mt-2"> <button onclick="keypadInput('7')" class="btn-keypad p-4 bg-white text-gray-800 keypad-button-text rounded-xl shadow">7</button>
+                        <button onclick="keypadInput('8')" class="btn-keypad p-4 bg-white text-gray-800 keypad-button-text rounded-xl shadow">8</button>
+                        <button onclick="keypadInput('9')" class="btn-keypad p-4 bg-white text-gray-800 keypad-button-text rounded-xl shadow">9</button>
+                        <button onclick="keypadInput('del')" class="btn-keypad p-4 bg-red-500 text-white keypad-button-text rounded-xl shadow hover:bg-red-600">Del</button> <button onclick="keypadInput('4')" class="btn-keypad p-4 bg-white text-gray-800 keypad-button-text rounded-xl shadow">4</button>
+                        <button onclick="keypadInput('5')" class="btn-keypad p-4 bg-white text-gray-800 keypad-button-text rounded-xl shadow">5</button>
+                        <button onclick="keypadInput('6')" class="btn-keypad p-4 bg-white text-gray-800 keypad-button-text rounded-xl shadow">6</button>
+                        <button onclick="processTransaction()" class="col-span-1 row-span-3 p-3 bg-green-500 text-white font-extrabold text-2xl rounded-xl shadow hover:bg-green-600 flex items-center justify-center">
                             結帳
                         </button>
                         
-                        <!-- 1, 2, 3 -->
-                        <button onclick="keypadInput('1')" class="btn-keypad p-4 bg-white text-gray-800 font-bold text-lg rounded-lg shadow">1</button>
-                        <button onclick="keypadInput('2')" class="btn-keypad p-4 bg-white text-gray-800 font-bold text-lg rounded-lg shadow">2</button>
-                        <button onclick="keypadInput('3')" class="btn-keypad p-4 bg-white text-gray-800 font-bold text-lg rounded-lg shadow">3</button>
+                        <button onclick="keypadInput('1')" class="btn-keypad p-4 bg-white text-gray-800 keypad-button-text rounded-xl shadow">1</button>
+                        <button onclick="keypadInput('2')" class="btn-keypad p-4 bg-white text-gray-800 keypad-button-text rounded-xl shadow">2</button>
+                        <button onclick="keypadInput('3')" class="btn-keypad p-4 bg-white text-gray-800 keypad-button-text rounded-xl shadow">3</button>
 
-                        <!-- 0 和 清空訂單 (新佈局) -->
-                        <!-- 0 鍵 col-span-2 -->
-                        <button onclick="keypadInput('0')" class="col-span-2 btn-keypad p-4 bg-white text-gray-800 font-bold text-lg rounded-lg shadow">0</button>
+                        <button onclick="keypadInput('0')" class="col-span-2 btn-keypad p-4 bg-white text-gray-800 keypad-button-text rounded-xl shadow">0</button>
                         
-                        <!-- 清空訂單 (col-span-1) 填補 0 和結帳按鈕之間的空間 -->
-                        <button onclick="clearOrder()" class="col-span-1 p-4 bg-red-600 text-white font-bold text-sm rounded-lg shadow hover:bg-red-700 keypad-special">
+                        <button onclick="clearOrder()" class="col-span-1 p-4 bg-red-600 text-white font-bold text-base rounded-xl shadow hover:bg-red-700 keypad-special">
                             清空訂單
                         </button>
                         
-                        <!-- 注意: 這裡不再需要隱藏的佔位 div，因為結帳按鈕已經佔據了該位置。 -->
-                    </div>
+                        </div>
                 </div>
             </div>
 
-            <!-- 2. 歷史訂單視圖 (預設隱藏) -->
             <div id="history-view" class="hidden flex-col flex-grow overflow-y-auto space-y-4">
-                <p class="text-sm text-gray-500">最近完成的交易記錄 (最新的顯示在最上方)。</p>
+                <p class="text-base text-gray-500">最近完成的交易記錄 (最新的顯示在最上方)。</p>
 
-                <!-- 銷售統計概覽 -->
                 <div id="history-stats" class="bg-white p-4 rounded-xl shadow border-l-4 border-blue-500">
-                    <h4 class="text-lg font-bold text-blue-700 mb-2">銷售統計概覽</h4>
-                    <div id="stats-content" class="text-sm text-gray-700 space-y-1">
-                        <p>總訂單數: <span id="stat-total-orders" class="font-semibold text-xl text-blue-600">0</span></p>
+                    <h4 class="text-xl font-bold text-blue-700 mb-2">銷售統計概覽</h4>
+                    <div id="stats-content" class="text-base text-gray-700 space-y-1">
+                        <p>總訂單數: <span id="stat-total-orders" class="font-semibold text-2xl text-blue-600">0</span></p>
                         <div class="pt-2 border-t mt-2">
                              <h5 class="font-semibold text-gray-600">單品銷售數量統計:</h5>
-                             <ul id="stat-item-list" class="mt-1 space-y-0.5 grid grid-cols-2 gap-x-4">
-                                 <!-- 統計列表將由 JS 渲染 -->
-                             </ul>
+                             <ul id="stat-item-list" class="mt-1 space-y-1 grid grid-cols-2 gap-x-6">
+                                 </ul>
                         </div>
                     </div>
                 </div>
 
-                <!-- 新增：結算與清除按鈕 -->
                 <div class="pt-4 border-t border-gray-300">
-                    <button onclick="settleAndClearHistory()" class="w-full py-3 bg-red-600 text-white font-extrabold text-lg rounded-lg shadow-xl hover:bg-red-700 transition">
+                    <button onclick="settleAndClearHistory()" class="w-full py-4 bg-red-600 text-white font-extrabold text-xl rounded-lg shadow-xl hover:bg-red-700 transition">
                         📊 結算並清空所有歷史訂單
                     </button>
                 </div>
 
-                <div id="history-list" class="space-y-3">
-                    <!-- 歷史訂單列表將由 JS 渲染 -->
-                </div>
+                <div id="history-list" class="space-y-4">
+                    </div>
             </div>
 
         </div>
 
     </div>
 
-    <!-- Custom Message Box (替代 alert/confirm) -->
-    <div id="message-box" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 hidden flex items-center justify-center">
-        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-xl space-y-4"> <!-- 調整寬度以容納報告內容 -->
-            <h3 id="message-title" class="text-xl font-bold text-gray-800">提示</h3>
-            <!-- Pre-wrap 用於保留報告中的換行與格式 -->
-            <p id="message-content" class="text-gray-600 whitespace-pre-wrap font-mono text-sm leading-relaxed"></p> 
-            <div class="flex justify-end space-x-2">
-                <button id="message-confirm-btn" onclick="hideMessage(true)" class="hidden px-4 py-2 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600">確定</button>
-                <button id="message-ok-btn" onclick="hideMessage(false)" class="px-4 py-2 bg-amber-500 text-white font-semibold rounded-lg hover:bg-amber-600">確認</button>
+    <div id="message-box" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-lg md:max-w-xl space-y-4"> <h3 id="message-title" class="text-2xl font-bold text-gray-800">提示</h3>
+            <p id="message-content" class="text-gray-600 whitespace-pre-wrap font-mono text-base leading-relaxed"></p> 
+            <div class="flex justify-end space-x-3">
+                <button id="message-confirm-btn" onclick="hideMessage(true)" class="hidden px-5 py-2 bg-red-500 text-white font-semibold text-lg rounded-lg hover:bg-red-600">確定</button>
+                <button id="message-ok-btn" onclick="hideMessage(false)" class="px-5 py-2 bg-amber-500 text-white font-semibold text-lg rounded-lg hover:bg-amber-600">確認</button>
             </div>
         </div>
     </div>
 
-    <!-- Settings Modal (新增設定視窗) -->
     <div id="settings-modal" class="fixed inset-0 bg-gray-900 bg-opacity-70 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto space-y-6">
+        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto space-y-6">
             <h3 class="text-2xl font-bold text-gray-800 border-b pb-2">菜單與價格設定</h3>
-            <p class="text-sm text-gray-500">點擊項目可修改名稱和價格，或點擊刪除按鈕。</p>
+            <p class="text-base text-gray-500">點擊項目可修改名稱和價格，或點擊刪除按鈕。</p>
             
-            <!-- 菜單項目列表與編輯區 -->
             <div id="settings-menu-list" class="space-y-4">
-                <!-- 設定項目將由 JS 渲染 -->
-            </div>
+                </div>
 
-            <!-- 新增品項表單 -->
             <div class="border p-4 rounded-lg bg-gray-50 space-y-3">
-                <h4 class="text-lg font-semibold text-gray-700">新增品項</h4>
-                <div class="grid grid-cols-3 gap-3">
-                    <input type="text" id="new-item-name" placeholder="品項名稱" class="col-span-1 p-2 border rounded focus:border-amber-500 focus:ring-1 focus:ring-amber-500">
-                    <input type="number" id="new-item-price" placeholder="價格 (TWD)" class="col-span-1 p-2 border rounded focus:border-amber-500 focus:ring-1 focus:ring-amber-500">
-                    <select id="new-item-category" class="col-span-1 p-2 border rounded focus:border-amber-500 focus:ring-1 focus:ring-amber-500">
+                <h4 class="text-xl font-semibold text-gray-700">新增品項</h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <input type="text" id="new-item-name" placeholder="品項名稱" class="col-span-1 p-3 border rounded text-lg focus:border-amber-500 focus:ring-1 focus:ring-amber-500">
+                    <input type="number" id="new-item-price" placeholder="價格 (TWD)" class="col-span-1 p-3 border rounded text-lg focus:border-amber-500 focus:ring-1 focus:ring-amber-500">
+                    <select id="new-item-category" class="col-span-1 p-3 border rounded text-lg focus:border-amber-500 focus:ring-1 focus:ring-amber-500">
                         <option value="HandBrew">手沖咖啡</option>
                         <option value="GiftBox">咖啡禮盒</option>
                     </select>
                 </div>
-                <button onclick="addNewMenuItem()" class="w-full py-2 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600">
+                <button onclick="addNewMenuItem()" class="w-full py-3 bg-green-500 text-white font-semibold text-xl rounded-lg hover:bg-green-600">
                     新增品項
                 </button>
             </div>
 
             <div class="flex justify-end">
-                <button onclick="closeSettings()" class="px-6 py-2 bg-amber-500 text-white font-semibold rounded-lg hover:bg-amber-600">
+                <button onclick="closeSettings()" class="px-8 py-3 bg-amber-500 text-white font-semibold text-xl rounded-lg hover:bg-amber-600">
                     完成設定並關閉
                 </button>
             </div>
@@ -424,17 +417,18 @@
                 titleEl.textContent = categoryTitle;
                 menuItemsEl.appendChild(titleEl);
 
-                // 類別下的品項列表
+                // 類別下的品項列表 (使用 menu-grid class 讓 CSS media query 生效)
                 const itemsContainer = document.createElement('div');
-                itemsContainer.className = 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4';
+                itemsContainer.className = 'menu-grid grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4';
                 
                 groupedItems[categoryKey].forEach(item => {
                     const button = document.createElement('button');
-                    button.className = `btn-menu p-4 bg-amber-400 text-white font-semibold text-lg rounded-xl shadow-lg hover:bg-amber-500`;
+                    // 增大 padding 和文字大小以適應觸控
+                    button.className = `btn-menu p-5 bg-amber-400 text-white font-semibold text-xl rounded-xl shadow-lg hover:bg-amber-500`;
                     button.innerHTML = `
-                        <span class="block text-xl">${item.name}</span>
-                        <span class="block text-sm font-light">$${item.price}</span>
-                        <span class="block text-xs mt-1 text-amber-900 font-bold">點擊加入</span>
+                        <span class="block text-2xl">${item.name}</span>
+                        <span class="block text-base font-light">$${item.price}</span>
+                        <span class="block text-sm mt-1 text-amber-900 font-bold">點擊加入</span>
                     `;
                     button.onclick = () => addToOrder(item.id);
                     itemsContainer.appendChild(button);
@@ -491,10 +485,10 @@
                         const deletedItemName = '已刪除品項'; // 顯示替代名稱
                         const count = currentOrder[itemId];
                         const detailRow = document.createElement('div');
-                        detailRow.className = 'flex justify-between items-center border-b border-gray-100 py-1 bg-red-50';
+                        detailRow.className = 'flex justify-between items-center border-b border-gray-100 py-2 bg-red-50';
                          detailRow.innerHTML = `
                             <div class="flex items-center space-x-2">
-                                <button onclick="removeFromOrder(${itemId})" class="text-red-500 hover:text-red-700 font-bold text-lg">-</button>
+                                <button onclick="removeFromOrder(${itemId})" class="text-red-500 hover:text-red-700 font-bold text-2xl p-1">-</button>
                                 <span class="text-gray-700 font-medium">${deletedItemName} (ID:${itemId})</span>
                             </div>
                             <div class="flex items-center space-x-4">
@@ -511,10 +505,10 @@
                     totalAmount += subtotal;
 
                     const detailRow = document.createElement('div');
-                    detailRow.className = 'flex justify-between items-center border-b border-gray-100 py-1';
+                    detailRow.className = 'flex justify-between items-center border-b border-gray-100 py-2';
                     detailRow.innerHTML = `
                         <div class="flex items-center space-x-2">
-                            <button onclick="removeFromOrder(${item.id})" class="text-red-500 hover:text-red-700 font-bold text-lg">-</button>
+                            <button onclick="removeFromOrder(${item.id})" class="text-red-500 hover:text-red-700 font-bold text-2xl p-1">-</button>
                             <span class="text-gray-700 font-medium">${item.name}</span>
                         </div>
                         <div class="flex items-center space-x-4">
@@ -576,7 +570,7 @@
             
             if (totalAmount === 0) {
                 changeAmountEl.textContent = '$0';
-                changeAmountEl.className = 'text-xl font-bold pt-2 text-green-600';
+                changeAmountEl.className = 'text-2xl font-bold pt-2 text-green-600';
                 return;
             }
 
@@ -584,10 +578,10 @@
 
             if (change >= 0) {
                 changeAmountEl.textContent = `$${change}`;
-                changeAmountEl.className = 'text-xl font-bold pt-2 text-green-600';
+                changeAmountEl.className = 'text-2xl font-bold pt-2 text-green-600';
             } else {
                 changeAmountEl.textContent = `$${Math.abs(change)} (不足)`;
-                changeAmountEl.className = 'text-xl font-bold pt-2 text-red-600'; 
+                changeAmountEl.className = 'text-2xl font-bold pt-2 text-red-600'; 
             }
         }
 
@@ -710,7 +704,7 @@
             } else {
                 sortedStats.forEach(([name, count]) => {
                     const li = document.createElement('li');
-                    li.className = 'flex justify-between';
+                    li.className = 'flex justify-between text-base';
                     li.innerHTML = `<span>${name}:</span><span class="font-extrabold text-blue-500">${count}</span>`;
                     statListEl.appendChild(li);
                 });
@@ -728,7 +722,7 @@
                 
                 // 建立明細列表
                 const itemDetails = order.items.map(item => 
-                    `<li class="flex justify-between text-xs text-gray-500">
+                    `<li class="flex justify-between text-sm text-gray-500">
                         <span>${item.name}</span>
                         <span>${item.count} x $${item.price}</span>
                     </li>`
@@ -736,26 +730,26 @@
 
                 historyCard.innerHTML = `
                     <div class="flex justify-between items-center pb-1 border-b border-gray-100">
-                        <span class="text-lg font-bold text-gray-800">單號: ${order.id}</span>
-                        <span class="text-sm text-gray-500">${order.timestamp}</span>
+                        <span class="text-xl font-bold text-gray-800">單號: ${order.id}</span>
+                        <span class="text-base text-gray-500">${order.timestamp}</span>
                     </div>
                     
                     <ul class="list-disc pl-4 space-y-1">${itemDetails}</ul>
                     
-                    <div class="flex justify-between text-sm text-gray-700 pt-2 border-t">
+                    <div class="flex justify-between text-base text-gray-700 pt-2 border-t">
                         <span>總計金額:</span>
-                        <span class="font-bold text-red-600 text-lg">$${order.total}</span>
+                        <span class="font-bold text-red-600 text-xl">$${order.total}</span>
                     </div>
-                    <div class="flex justify-between text-sm text-gray-700">
+                    <div class="flex justify-between text-base text-gray-700">
                         <span>找零:</span>
-                        <span class="font-bold text-green-600">$${order.change}</span>
+                        <span class="font-bold text-green-600 text-xl">$${order.change}</span>
                     </div>
                 `;
                 historyListEl.appendChild(historyCard);
             });
         }
 
-        // === 新增：結算並清空歷史訂單的函數 (已修正重設 orderId 的問題) ===
+        // === 結算並清空歷史訂單的函數 (使用了您的偏好：段落式、報告風格) ===
         async function settleAndClearHistory() {
             if (historicalOrders.length === 0) {
                 await showMessage('操作提示', '目前歷史訂單記錄為空，無需執行結算操作。');
@@ -780,7 +774,7 @@
             const lastOrder = historicalOrders[0];
             const totalItemsSold = Object.values(stats).reduce((sum, count) => sum + count, 0);
 
-            // 2. 準備正式的報告內容 (符合段落式、報告風格)
+            // 2. 準備正式的報告內容 (符合段落式、報告風格 - 參考您的歷史偏好)
             const reportContent = `
 **[正式結算評估報告]**
 ---
@@ -837,14 +831,14 @@
             currentView = view;
             
             if (view === 'order') {
-                tabOrderEl.className = 'flex-1 py-2 px-4 text-center font-bold text-lg rounded-t-lg transition-colors border-b-4 border-amber-500 text-amber-600';
-                tabHistoryEl.className = 'flex-1 py-2 px-4 text-center font-bold text-lg rounded-t-lg text-gray-500 hover:text-gray-700 border-b-4 border-transparent';
+                tabOrderEl.className = 'flex-1 py-3 px-4 text-center font-bold text-lg rounded-t-lg transition-colors border-b-4 border-amber-500 text-amber-600';
+                tabHistoryEl.className = 'flex-1 py-3 px-4 text-center font-bold text-lg rounded-t-lg text-gray-500 hover:text-gray-700 border-b-4 border-transparent';
                 
                 orderViewEl.classList.remove('hidden');
                 historyViewEl.classList.add('hidden');
             } else { 
-                tabOrderEl.className = 'flex-1 py-2 px-4 text-center font-bold text-lg rounded-t-lg text-gray-500 hover:text-gray-700 border-b-4 border-transparent';
-                tabHistoryEl.className = 'flex-1 py-2 px-4 text-center font-bold text-lg rounded-t-lg transition-colors border-b-4 border-amber-500 text-amber-600';
+                tabOrderEl.className = 'flex-1 py-3 px-4 text-center font-bold text-lg rounded-t-lg text-gray-500 hover:text-gray-700 border-b-4 border-transparent';
+                tabHistoryEl.className = 'flex-1 py-3 px-4 text-center font-bold text-lg rounded-t-lg transition-colors border-b-4 border-amber-500 text-amber-600';
                 
                 orderViewEl.classList.add('hidden');
                 historyViewEl.classList.remove('hidden'); 
@@ -852,7 +846,7 @@
             }
         }
 
-        // === 菜單設定功能 (與原程式碼相同) ===
+        // === 菜單設定功能 (與原程式碼相同，但調整了排版以適應平板) ===
 
         /** 開啟設定模態視窗 */
         function openSettings() {
@@ -897,28 +891,27 @@
                 groupedItems[categoryKey].forEach(item => {
                     const row = document.createElement('div');
                     row.id = `setting-item-${item.id}`;
-                    row.className = 'item-setting-row flex items-center justify-between p-3 bg-white border rounded-lg shadow-sm';
+                    row.className = 'item-setting-row flex flex-col md:flex-row items-stretch md:items-center justify-between p-3 bg-white border rounded-lg shadow-sm space-y-2 md:space-y-0';
                     row.innerHTML = `
-                        <!-- 編輯欄位 -->
-                        <div class="flex-1 grid grid-cols-3 gap-2 items-center">
+                        <div class="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-2 items-center">
                             <input type="text" value="${item.name}" 
                                 id="name-${item.id}" 
-                                class="p-1 border rounded focus:border-amber-500" 
+                                placeholder="名稱"
+                                class="p-2 border rounded text-base focus:border-amber-500" 
                                 onchange="editMenuItem(${item.id}, 'name', this.value)">
                             <input type="number" value="${item.price}" 
                                 id="price-${item.id}" 
-                                class="p-1 border rounded text-right focus:border-amber-500" 
+                                placeholder="價格"
+                                class="p-2 border rounded text-base text-right focus:border-amber-500" 
                                 onchange="editMenuItem(${item.id}, 'price', parseInt(this.value) || 0)">
-                            <select id="category-${item.id}" class="p-1 border rounded focus:border-amber-500" onchange="editMenuItem(${item.id}, 'category', this.value)">
+                            <select id="category-${item.id}" class="p-2 border rounded text-base focus:border-amber-500" onchange="editMenuItem(${item.id}, 'category', this.value)">
                                 ${Object.keys(menuCategories).map(key => 
                                     `<option value="${key}" ${item.category === key ? 'selected' : ''}>${menuCategories[key]}</option>`
                                 ).join('')}
                             </select>
                         </div>
-                        <!-- 刪除按鈕 -->
-                        <button onclick="deleteMenuItem(${item.id})" class="ml-4 p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">
-                            <!-- 垃圾桶圖示 -->
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                        <button onclick="deleteMenuItem(${item.id})" class="md:ml-4 p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
                         </button>
                     `;
                     settingsMenuListEl.appendChild(row);
